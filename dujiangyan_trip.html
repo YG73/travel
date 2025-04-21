@@ -10,6 +10,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- 通用函数 -->
     <script>
+        
+        
+        // 分享到微信
+        function shareToWeChat() {
+            // 检查是否在微信浏览器中
+            const isWeiXin = /MicroMessenger/i.test(navigator.userAgent);
+            if (isWeiXin) {
+                // 触发微信自带的分享
+                if (window.wx) {
+                    window.wx.ready(function() {
+                        window.wx.showMenuItems({
+                            menuList: ['menuItem:share:appMessage', 'menuItem:share:timeline']
+                        });
+                    });
+                }
+                showToast('请点击右上角进行分享');
+            } else {
+                showToast('请在微信中打开后分享');
+            }
+        }
+
+        // 复制链接
+        function copyLink() {
+            const dummy = document.createElement('textarea');
+            document.body.appendChild(dummy);
+            dummy.value = window.location.href;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            showToast('链接已复制到剪贴板');
+        }
+
         // 显示提示信息
         function showToast(message) {
             const toast = document.getElementById('shareToast');
@@ -105,6 +137,182 @@
                 }
             });
         });
+
+        // 地点坐标数据
+        const locations = {
+            '西南财经大学': { lat: 30.685831, lng: 103.818232 },
+            '都江堰景区': { lat: 31.003674, lng: 103.619535 },
+            '都江堰李冰纪念馆': { lat: 31.002859, lng: 103.617986 },
+            '都江堰伏龙观': { lat: 31.004521, lng: 103.618742 },
+            '都江堰二王庙': { lat: 31.003152, lng: 103.619876 },
+            '李煮血川菜馆': { lat: 31.002857, lng: 103.619989 },
+            '鸿运餐馆': { lat: 31.002456, lng: 103.620123 },
+            '光头餐馆': { lat: 31.002789, lng: 103.619876 }
+        };
+
+        // 时间点击展开/收起详情
+        function toggleDetail(timeId) {
+            const detail = document.getElementById(timeId);
+            if (detail) {
+                if (detail.classList.contains('active')) {
+                    detail.classList.remove('active');
+                } else {
+                    // 先关闭其他所有展开的详情
+                    document.querySelectorAll('.detail-content.active').forEach(item => {
+                        if (item.id !== timeId) {
+                            item.classList.remove('active');
+                        }
+                    });
+                    detail.classList.add('active');
+                }
+            }
+        }
+
+ // 导航功能
+ function openGaodeMap(name, address) {
+            const isAndroid = navigator.userAgent.toLowerCase().indexOf('android') > -1;
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            
+            let url;
+            if (isIOS) {
+                url = `iosamap://path?sourceApplication=dujiangyan_trip&dev=0&dlat=${address.lat}&dlon=${address.lng}&dname=${encodeURIComponent(name)}&t=0`;
+            } else if (isAndroid) {
+                url = `androidamap://route?sourceApplication=dujiangyan_trip&dev=0&dlat=${address.lat}&dlon=${address.lng}&dname=${encodeURIComponent(name)}&t=0`;
+            } else {
+                url = `https://uri.amap.com/navigation?to=${address.lng},${address.lat},${encodeURIComponent(name)}&mode=bus&coordinate=gaode`;
+            }
+
+            window.location.href = url;
+
+            setTimeout(() => {
+                if (document.hidden || document.webkitHidden) return;
+                if (confirm('您似乎还没有安装高德地图，是否前往下载？')) {
+                    if (isIOS) {
+                        window.location.href = 'https://apps.apple.com/cn/app/gao-de-di-tu-dao-hang-bus/id461703208';
+                    } else {
+                        window.location.href = 'https://mobile.amap.com/';
+                    }
+                }
+            }, 3000);
+        }
+
+        // 显示讲解服务信息
+        function showGuideInfo() {
+            const modal = document.getElementById('guideModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        // 关闭讲解服务信息
+        function closeGuideInfo() {
+            const modal = document.getElementById('guideModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 显示李冰纪念馆信息
+        function showLibingInfo() {
+            const modal = document.getElementById('libingModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        // 关闭李冰纪念馆信息
+        function closeLibingInfo() {
+            const modal = document.getElementById('libingModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 显示伏龙观信息
+        function showFulongInfo() {
+            const modal = document.getElementById('fulongModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        // 关闭伏龙观信息
+        function closeFulongInfo() {
+            const modal = document.getElementById('fulongModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 打开小程序
+        function openMiniProgram() {
+            showToast('请使用微信扫描景区二维码');
+        }
+
+        // 分享到微信
+        function shareToWeChat() {
+            showToast('请使用浏览器的分享功能');
+        }
+
+        // 复制链接
+        function copyLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('链接已复制到剪贴板');
+            }).catch(() => {
+                showToast('复制失败，请手动复制');
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化人流量显示
+            const flowIndicator = document.getElementById('flowIndicator');
+            const flowText = document.getElementById('flowText');
+            if (flowIndicator && flowText) {
+                // 模拟实时人流数据
+                const flow = Math.random();
+                flowIndicator.style.width = `${flow * 100}%`;
+                if (flow < 0.3) {
+                    flowText.textContent = '舒适';
+                    flowIndicator.style.background = '#4CAF50';
+                } else if (flow < 0.6) {
+                    flowText.textContent = '适中';
+                    flowIndicator.style.background = '#FFC107';
+                } else {
+                    flowText.textContent = '拥挤';
+                    flowIndicator.style.background = '#F44336';
+                }
+            }
+
+            // 初始化天气信息
+            const weatherInfo = document.getElementById('weatherInfo');
+            const weatherStatus = document.getElementById('weatherStatus');
+            const weatherSuggestion = document.getElementById('weatherSuggestion');
+            
+            if (weatherInfo && weatherStatus && weatherSuggestion) {
+                // 模拟天气数据
+                const weather = {
+                    temp: Math.floor(Math.random() * 15 + 15),
+                    condition: ['晴', '多云', '阴'][Math.floor(Math.random() * 3)],
+                    wind: ['微风', '东南风3级', '西北风2级'][Math.floor(Math.random() * 3)]
+                };
+
+                weatherInfo.innerHTML = `<i class="fas fa-temperature-high"></i> ${weather.temp}°C`;
+                weatherStatus.innerHTML = `<i class="fas fa-cloud"></i> ${weather.condition} | ${weather.wind}`;
+                weatherSuggestion.innerHTML = `<i class="fas fa-info-circle"></i> 天气${weather.temp > 25 ? '偏热' : '适宜'}，建议${weather.temp > 25 ? '带些水' : '适量运动'}`;
+            }
+        });
+
+        // 关闭所有模态框的通用函数
+        window.onclick = function(event) {
+            const modals = document.getElementsByClassName('modal-overlay');
+            for (let modal of modals) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
     </script>
     <style>
         :root {
